@@ -80,6 +80,9 @@ namespace RC::Input
         using ModifierKeyArray = std::array<Input::ModifierKey, max_modifier_keys>;
         auto register_keydown_event(Input::Key, const ModifierKeyArray&, const EventCallbackCallable&, uint8_t custom_data = 0) -> void;
 
+        auto is_keydown_event_registered(Input::Key) -> bool;
+        auto is_keydown_event_registered(Input::Key, const ModifierKeyArray&) -> bool;
+
         auto get_events() -> std::vector<KeySet>&;
         auto get_allow_input() -> bool;
         auto set_allow_input(bool new_value) -> void;
