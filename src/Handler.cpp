@@ -191,6 +191,104 @@ namespace RC::Input
         }
     }
 
+    auto Handler::is_keydown_event_registered(Input::Key key) -> bool
+    {
+        bool is_key_registered{};
+        bool is_key_registered_with_no_modifier_keys = true;
+        for (const auto& key_set : m_key_sets)
+        {
+            for (const auto& [key_registered, key_data_container] : key_set.key_data)
+            {
+                if (key_registered == key)
+                {
+                    is_key_registered = true;
+                }
+                else
+                {
+                    continue;
+                }
+
+                for (const auto& key_data : key_data_container)
+                {
+                    if (key_data.requires_modifier_keys)
+                    {
+                        is_key_registered_with_no_modifier_keys = false;
+                        break;
+                    }
+                }
+
+                if (!is_key_registered_with_no_modifier_keys) { break; }
+            }
+            
+            if (!is_key_registered_with_no_modifier_keys) { break; }
+        }
+
+        return is_key_registered && is_key_registered_with_no_modifier_keys;
+    }
+
+    auto Handler::is_keydown_event_registered(Input::Key key, const ModifierKeyArray& modifier_keys) -> bool
+    {
+        bool is_key_registered{};
+        bool all_modifier_keys_match{};
+        for (const auto& key_set : m_key_sets)
+        {
+            for (const auto& [key_registered, key_data_container] : key_set.key_data)
+            {
+                if (key_registered == key)
+                {
+                    is_key_registered = true;
+                }
+                else
+                {
+                    continue;
+                }
+
+                all_modifier_keys_match = false;
+                for (const auto& key_data : key_data_container)
+                {
+                    if (!key_data.requires_modifier_keys && !modifier_keys.empty())
+                    {
+                        all_modifier_keys_match = false;
+                        continue;
+                    }
+
+                    if (!key_data.requires_modifier_keys && modifier_keys.empty())
+                    {
+                        all_modifier_keys_match = true;
+                        break;
+                    }
+
+                    for (const auto& modifier_key : key_data.required_modifier_keys)
+                    {
+                        for (const auto modifier_key_to_check : modifier_keys)
+                        {
+                            if (modifier_key_to_check == ModifierKey::MOD_KEY_START_OF_ENUM) { continue; }
+
+                            if (modifier_key_to_check == modifier_key)
+                            {
+                                all_modifier_keys_match = true;
+                            }
+                            else
+                            {
+                                all_modifier_keys_match = false;
+                            }
+                        }
+
+                        if (all_modifier_keys_match) { break; }
+                    }
+
+                    if (all_modifier_keys_match) { break; }
+                }
+
+                if (all_modifier_keys_match) { break; }
+            }
+
+            if (all_modifier_keys_match) { break; }
+        }
+
+        return is_key_registered && all_modifier_keys_match;
+    }
+
     auto Handler::get_events() -> std::vector<KeySet>&
     {
         return m_key_sets;
